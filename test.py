@@ -1,9 +1,6 @@
 import unittest
 from elasticsearch import Elasticsearch
 import api
-#1. Run a Elasticstore server over localhost
-#2. Run api.py connected to Elasticstore
-#3. Run this script
 
 class TestAPIMethods(unittest.TestCase):
 	def test_addContact(self):
