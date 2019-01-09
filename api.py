@@ -15,7 +15,7 @@ def getContactListHandler():
 	pageNumber = queryParameters.get('page')
 	query = queryParameters.get('query')
 
-	return address_book.getContactList(es, pageSize, pageNumber, query)
+	return getContactList(es, pageSize, pageNumber, query)
 
 @app.route('/contact', methods=['POST']) #Could move into same route as GET, and use request.method to check request type.
 def addContactHandler():
@@ -28,11 +28,11 @@ def addContactHandler():
 	address = request.form.get('address')
 	description = request.form.get('description')
 
-	return address_book.addContact(name, number, address, description)
+	return addContact(name, number, address, description)
 
 @app.route('/contact/<string:name>', methods=['GET'])
 def getContactHandler(name):
-	return address_book.getContact(name)
+	return getContact(name)
 
 @app.route('/contact/<string:name>', methods=['PUT'])
 def updateContactHandler(name):
@@ -40,11 +40,11 @@ def updateContactHandler(name):
 	address = request.form.get('address')
 	description = request.form.get('description')
 
-	return address_book.updateContact(name, number, address, description)
+	return updateContact(name, number, address, description)
 
 @app.route('/contact/<string:name>', methods=['DELETE'])
 def deleteContactHandler(name):
-	return address_book.deleteContact(name)
+	return deleteContact(name)
 
 
 def getContactList(pageSize, pageNumber, query):
