@@ -32,6 +32,7 @@ def getContactList():
 			return "<p>Invalid page number, must be greater than 0.</p>", 400
 
 	#Search with optional query
+	#Possible improvement: Sort query results alphabetically
 	query = queryParameters.get('query')
 	result = None
 	if (not query):
@@ -43,14 +44,26 @@ def getContactList():
 	#result = es.search(index='contacts', doc_type='contact', size=10, from_=0, q=)
 	return jsonify(result['hits']['hits']), 200
 
-#Could move into same route as GET, and use request.method to check request type. This seems cleaner to read though
-#If contact name already exists, overwrites existing contact
-@app.route('/contact', methods=['POST'])
+@app.route('/contact', methods=['POST']) #Could move into same route as GET, and use request.method to check request type.
 def addContact():
+	#Required
 	name = request.form['name']
+	#name = str(name) 			The name is stored as unicode, change to string???
+
+	#Optional
+	number = request.form.get('number')
+	address = request.form.get('address')
+	description = request.form.get('description')
+
+	#Dont overwrite existing contact
+	if (es.exists(index='contacts', doc_type='contact', id=name)):
+		return "Contact name already exists.", 400
 
 	body = {
 		'name': name,
+		'number': number,
+		'address': address,
+		'description': description,
 		'timestamp': datetime.now()
 	}
 
@@ -68,10 +81,34 @@ def getContact(name):
 
 @app.route('/contact/<string:name>', methods=['PUT'])
 def updateContact(name):
-	return "<p>Update contact for " + name + "</p>", 200
+	if (not es.exists(index='contacts', doc_type='contact', id=name)):
+		return "<p>Contact not found.</p>", 400
+
+	result = es.get(index='contacts', doc_type='contact', id=name)
+
+	#Update body with values given
+	body = es.get(index='contacts', doc_type='contact', id=name)["_source"]
+	number = request.form.get('number')
+	if (number):
+		body['number'] = number
+	address = request.form.get('address')
+	if (address):
+		body['address'] = address
+	description = request.form.get('description')
+	if (description):
+		body['description'] = description
+
+	#Overwrite existing entry
+	result = es.index(index='contacts', doc_type='contact', id=name, body=body)
+
+	return jsonify(result), 200
 
 @app.route('/contact/<string:name>', methods=['DELETE'])
 def deleteContact(name):
-	return "<p>Delete contact for " + name + "</p>", 200
+	if (not es.exists(index='contacts', doc_type='contact', id=name)):
+		return "<p>Contact not found.</p>", 400
+
+	result = es.delete(index='contacts', doc_type='contact', id=name)
+	return "<p>Deleted contact for " + name + "</p>", 200
 
 app.run(debug=True)
